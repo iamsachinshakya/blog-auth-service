@@ -3,32 +3,52 @@ import { Environment, LogLevel } from "./constants";
 
 // Define & validate environment schema
 const envSchema = z.object({
+    // ------------------------
     // Server
+    // ------------------------
     NODE_ENV: z.enum(Environment).default(Environment.DEVELOPMENT),
-    PORT: z
-        .string()
-        .regex(/^\d+$/, { message: "PORT must be a number" })
-        .default("5000"),
+    PORT: z.string().regex(/^\d+$/, "PORT must be a number").default("5000"),
     CORS_ORIGIN: z.string(),
 
-    // Database
-    MONGODB_URI: z.string(),
-    POSTGRES_URI: z.string(),
-    DB_NAME: z.string().optional(),
+    // ------------------------
+    // Database (PostgreSQL)
+    // ------------------------
+    POSTGRES_USER: z.string(),
+    POSTGRES_PASSWORD: z.string(),
+    POSTGRES_DB: z.string(),
+    POSTGRES_HOST: z.string(),
+    POSTGRES_PORT: z.string().regex(/^\d+$/, "POSTGRES_PORT must be a number"),
+    DATABASE_URL: z.string().url(),
+
+    // ------------------------
     // JWT
-    ACCESS_TOKEN_SECRET: z.string().min(8, "ACCESS_TOKEN_SECRET must be at least 8 characters"),
+    // ------------------------
+    ACCESS_TOKEN_SECRET: z.string().min(8),
     ACCESS_TOKEN_EXPIRY: z.string(),
-    REFRESH_TOKEN_SECRET: z.string().min(8, "REFRESH_TOKEN_SECRET must be at least 8 characters"),
+    REFRESH_TOKEN_SECRET: z.string().min(8),
     REFRESH_TOKEN_EXPIRY: z.string(),
 
+    // ------------------------
     // Logging
+    // ------------------------
     LOG_LEVEL: z.enum(LogLevel).default(LogLevel.DEBUG),
 
-    // Optional integrations
+    // ------------------------
+    // Cloudinary (optional)
+    // ------------------------
     CLOUDINARY_CLOUD_NAME: z.string().optional(),
     CLOUDINARY_API_KEY: z.string().optional(),
     CLOUDINARY_API_SECRET: z.string().optional(),
+
+    // ------------------------
+    // Redis (optional)
+    // ------------------------
+    REDIS_HOST: z.string().optional(),
+    REDIS_PORT: z.string().optional(),
+    REDIS_PASSWORD: z.string().optional(),
     REDIS_URL: z.string().optional(),
+
+
 });
 
 const parsed = envSchema.safeParse(process.env);

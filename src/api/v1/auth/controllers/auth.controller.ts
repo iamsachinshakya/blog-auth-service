@@ -31,16 +31,16 @@ export class AuthController implements IAuthController {
         ErrorCode.UNAUTHORIZED,
       );
 
-    const user = await ServiceProvider.userService.getUserById(userId);
+    // const user = await ServiceProvider.userService.getUserById(userId);
 
-    if (!user)
-      throw new ApiError(
-        "User not found",
-        404,
-        ErrorCode.USER_NOT_FOUND,
-      );
+    // if (!user)
+    //   throw new ApiError(
+    //     "User not found",
+    //     404,
+    //     ErrorCode.USER_NOT_FOUND,
+    //   );
 
-    return ApiResponse.success(res, "User fetched successfully", user);
+    return ApiResponse.success(res, "User fetched successfully", req.user);
   }
 
   /* ---------------------------------------------------------

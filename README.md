@@ -1,8 +1,8 @@
 6. HOW TO RUN (Dev & Prod)
-🟦 Development (Hot-reload, Nodemon, Bind Mount)
+   🟦 Development (Hot-reload, Nodemon, Bind Mount)
 
 ```
-docker compose -f docker-compose-dev.yml up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 App will be available at:
@@ -20,7 +20,7 @@ Maildev at:
 🟩 Production (Optimized Build, No Dev Deps)
 
 ```
-docker compose -f docker-compose-prod.yml up --build -d
+docker compose -f docker-compose.prod.yml up --build -d
 ```
 
 App will run at:

@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only --env-file=.env src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --env-file=.env.development src/index.ts",
     "build": "tsc",
-    "start": "node --env-file=.env dist/index.js",
+    "start": "node --env-file=.env.production dist/index.js",
     "lint": "eslint . --ext .ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "ts-node-dev --transpile-only --env-file=.env src/app/db/postgres/migrate.ts",
+    "db:migrate": "ts-node-dev --transpile-only --env-file=.env.development src/app/db/postgres/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

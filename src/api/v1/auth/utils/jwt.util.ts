@@ -2,14 +2,14 @@ import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 import { env } from "../../../../app/config/env";
 import { ApiError } from "../../common/utils/apiError";
 import { parseExpiry } from "./auth.util";
-import { IAuthUser } from "../../modules/users/models/user.dto";
+import { IAuthUserEntity } from "../models/auth.entity";
 
 /**
  * Generate an access token
  * @param payload - User data to encode (e.g. { id, email })
  * @returns JWT access token as string
  */
-export const generateAccessToken = (payload: IAuthUser): string => {
+export const generateAccessToken = (payload: IAuthUserEntity): string => {
   if (!env.ACCESS_TOKEN_SECRET) {
     throw new ApiError("ACCESS_TOKEN_SECRET is not defined", 500);
   }

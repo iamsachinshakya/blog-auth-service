@@ -8,8 +8,7 @@ import {
   loginUserSchema,
 } from "../validations/auth.validation";
 import { authenticateJWT } from "../middlewares/auth.middleware";
-import { requirePermission } from "../middlewares/requirePermission";
-import { PERMISSIONS } from "../constants/auth.constant";
+// import { requirePermission } from "../middlewares/requirePermission";
 
 export const authRouter = Router();
 const authController = ControllerProvider.authController;
@@ -76,7 +75,6 @@ authRouter.post(
 authRouter.post(
   "/:userId/change-password",
   authenticateJWT,
-  requirePermission(PERMISSIONS.USER.CHANGE_PASSWORD),
   validateBody(updatePasswordSchema),
   asyncHandler(authController.changePassword.bind(authController))
 );

@@ -1,15 +1,14 @@
-import { IChangePassword, ILoginCredentials, IRegisterData } from "../../modules/users/models/user.dto";
-import { IUserEntity } from "../../modules/users/models/user.entity";
-
+import { IAuthUser, IChangePassword, ILoginCredentials, IRegisterData } from "../models/auth.dto";
+import { IAuthUserEntity } from "../models/auth.entity";
 
 export interface IAuthService {
     registerUser(
         data: IRegisterData
-    ): Promise<IUserEntity>;
+    ): Promise<IAuthUser>;
 
-    loginUser(data: ILoginCredentials): Promise<{ user: IUserEntity; accessToken: string; refreshToken: string }>;
+    loginUser(data: ILoginCredentials): Promise<{ user: IAuthUserEntity; accessToken: string; refreshToken: string }>;
 
-    logoutUser(userId: string): Promise<IUserEntity | null>;
+    logoutUser(userId: string): Promise<IAuthUserEntity | null>;
 
     refreshAccessToken(
         incomingRefreshToken: string

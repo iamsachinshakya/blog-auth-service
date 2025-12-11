@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import { drizzle, PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import logger from "../../utils/logger";
-import { env } from "../../config/env";
+import logger from "../utils/logger";
+import { env } from "../config/env";
 import * as schema from "./schema";
 
 let db: PostgresJsDatabase<typeof schema> | null = null;
@@ -14,7 +14,7 @@ export const connectDB = async (): Promise<PostgresJsDatabase<typeof schema>> =>
     }
 
     try {
-        const POSTGRES_URL = env.POSTGRES_URI;
+        const POSTGRES_URL = env.DATABASE_URL;
         if (!POSTGRES_URL) throw new Error("POSTGRES_URI is missing in .env");
 
         // Create postgres.js client (handles connection pooling internally)

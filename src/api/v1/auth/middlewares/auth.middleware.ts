@@ -4,7 +4,7 @@ import { ApiError } from "../../common/utils/apiError";
 import { verifyToken } from "../utils/jwt.util";
 import { env } from "../../../../app/config/env";
 import { ErrorCode } from "../../common/constants/errorCodes";
-import { IAuthUser } from "../../modules/users/models/user.dto";
+import { IAuthUser } from "../models/auth.dto";
 
 /**
  * Middleware: Authenticate requests using JWT
@@ -70,8 +70,6 @@ export const authenticateJWT = asyncHandler(
         req.user = {
             id: decoded.id,
             email: decoded.email,
-            username: decoded.username,
-            fullName: decoded.fullName,
             role: decoded.role,
             status: decoded.status
         };

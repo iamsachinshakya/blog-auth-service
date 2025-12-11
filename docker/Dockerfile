@@ -4,38 +4,41 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
-# Install tools required for native npm deps
-# RUN apk add --no-cache python3 make g++
+# Enable Corepack and activate pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy dependency files
-COPY package.json package-lock.json ./
+# Copy only dependency files first (best caching)
+COPY package.json pnpm-lock.yaml ./
 
-# Install all dependencies (including dev deps)
-RUN npm ci
+# Install dependencies (all, dev + prod)
+RUN pnpm install
 
-# Copy TypeScript config & app source
+# Copy TypeScript config & source code
 COPY tsconfig.json ./
 COPY src ./src
 
 # Build TypeScript → JavaScript
-RUN npm run build
+RUN pnpm build
 
 
 # --------------------------
-# 2. Production Runtime
+# 2. Production Stage (Lightweight)
 # --------------------------
 FROM node:24-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files again
-COPY package.json package-lock.json ./
+# Enable Corepack and activate pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Install ONLY production dependencies
-RUN npm ci --omit=dev
+# Copy only dependency files
+COPY package.json pnpm-lock.yaml ./
 
-# Copy compiled build files
+# Install only production dependencies
+RUN pnpm install --prod
+
+# Copy built output from builder
 COPY --from=builder /app/dist ./dist
 
 # Expose API port
