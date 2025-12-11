@@ -1,58 +1,25 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "../../common/utils/apiResponse";
-import { ServiceProvider } from "../../ServiceProvider";
-import { secureCookieOptions } from "../utils/auth.util";
-import { IAuthController } from "./auth.controller.interface";
 import { ApiError } from "../../common/utils/apiError";
 import { ErrorCode } from "../../common/constants/errorCodes";
+import { secureCookieOptions } from "../utils/auth.util";
+import { IAuthController } from "./auth.controller.interface";
+import { IAuthService } from "../services/auth.service.interface";
 
 export class AuthController implements IAuthController {
+  constructor(private readonly authService: IAuthService) { }
 
-  /* ---------------------------------------------------------
-     REGISTER
-  ----------------------------------------------------------*/
   async register(req: Request, res: Response): Promise<Response> {
-    const user = await ServiceProvider.authService.registerUser(req.body);
-    console.log("Registered user:", user);
-
+    const user = await this.authService.registerUser(req.body);
     return ApiResponse.success(res, "User registered successfully", user, 201);
   }
 
-  /* ---------------------------------------------------------
-     GET CURRENT USER
-  ----------------------------------------------------------*/
-  async getCurrentUser(req: Request, res: Response): Promise<Response> {
-    const userId = req?.user?.id;
-
-    if (!userId)
-      throw new ApiError(
-        "Unauthorized user",
-        401,
-        ErrorCode.UNAUTHORIZED,
-      );
-
-    // const user = await ServiceProvider.userService.getUserById(userId);
-
-    // if (!user)
-    //   throw new ApiError(
-    //     "User not found",
-    //     404,
-    //     ErrorCode.USER_NOT_FOUND,
-    //   );
-
-    return ApiResponse.success(res, "User fetched successfully", req.user);
-  }
-
-  /* ---------------------------------------------------------
-     LOGIN
-  ----------------------------------------------------------*/
   async login(req: Request, res: Response): Promise<Response> {
     const { user, accessToken, refreshToken } =
-      await ServiceProvider.authService.loginUser(req.body);
+      await this.authService.loginUser(req.body);
 
-    res
-      .cookie("accessToken", accessToken, secureCookieOptions)
-      .cookie("refreshToken", refreshToken, secureCookieOptions);
+    res.cookie("accessToken", accessToken, secureCookieOptions);
+    res.cookie("refreshToken", refreshToken, secureCookieOptions);
 
     return ApiResponse.success(res, "User logged in successfully", {
       user,
@@ -61,70 +28,42 @@ export class AuthController implements IAuthController {
     });
   }
 
-  /* ---------------------------------------------------------
-     LOGOUT
-  ----------------------------------------------------------*/
   async logout(req: Request, res: Response): Promise<Response> {
-    if (!req?.user?.id)
-      throw new ApiError(
-        "User ID missing from request",
-        400,
-        ErrorCode.BAD_REQUEST,
-      );
+    const userId = req.user?.id;
 
-    await ServiceProvider.authService.logoutUser(req.user.id);
+    if (!userId) {
+      throw new ApiError("User ID missing", 400, ErrorCode.BAD_REQUEST);
+    }
 
-    res
-      .clearCookie("accessToken", secureCookieOptions)
-      .clearCookie("refreshToken", secureCookieOptions);
+    await this.authService.logoutUser(userId);
+
+    res.clearCookie("accessToken", secureCookieOptions);
+    res.clearCookie("refreshToken", secureCookieOptions);
 
     return ApiResponse.success(res, "User logged out successfully");
   }
 
-  /* ---------------------------------------------------------
-     REFRESH ACCESS TOKEN
-  ----------------------------------------------------------*/
   async refreshAccessToken(req: Request, res: Response): Promise<Response> {
     const incomingRefreshToken =
-      req?.cookies?.refreshToken || req?.body?.refreshToken;
-
-    if (!incomingRefreshToken) {
-      throw new ApiError(
-        "Refresh token missing",
-        401,
-        ErrorCode.REFRESH_TOKEN_MISSING,
-      );
-    }
+      req.cookies?.refreshToken || req.body?.refreshToken;
 
     const { accessToken } =
-      await ServiceProvider.authService.refreshAccessToken(
-        incomingRefreshToken
-      );
+      await this.authService.refreshAccessToken(incomingRefreshToken);
 
-    res
-      .cookie("accessToken", accessToken, secureCookieOptions)
+    res.cookie("accessToken", accessToken, secureCookieOptions);
 
-    return ApiResponse.success(res, "Access token refreshed successfully", {
-      accessToken,
-    });
+    return ApiResponse.success(res, "Access token refreshed successfully");
   }
 
-  /* ---------------------------------------------------------
-     CHANGE PASSWORD
-  ----------------------------------------------------------*/
   async changePassword(req: Request, res: Response): Promise<Response> {
+    const userId = req.params.id;
     const { oldPassword, newPassword } = req.body;
-    const userId = req.params.id
 
-    if (!userId)
-      throw new ApiError(
-        "User not found in request",
-        401,
-        ErrorCode.UNAUTHORIZED,
-      );
+    if (!userId) {
+      throw new ApiError("User ID missing in request params", 400, ErrorCode.BAD_REQUEST);
+    }
 
-
-    await ServiceProvider.authService.changeUserPassword({ oldPassword, newPassword }, userId);
+    await this.authService.changeUserPassword({ oldPassword, newPassword }, userId);
 
     return ApiResponse.success(res, "Password changed successfully");
   }

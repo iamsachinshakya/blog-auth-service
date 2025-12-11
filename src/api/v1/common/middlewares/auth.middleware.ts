@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { asyncHandler } from "../../common/utils/asyncHandler";
-import { ApiError } from "../../common/utils/apiError";
-import { verifyToken } from "../utils/jwt.util";
+import { asyncHandler } from "../utils/asyncHandler";
+import { ApiError } from "../utils/apiError";
+import { verifyToken } from "../../auth/utils/jwt.util";
 import { env } from "../../../../app/config/env";
-import { ErrorCode } from "../../common/constants/errorCodes";
-import { IAuthUser } from "../models/auth.dto";
+import { ErrorCode } from "../constants/errorCodes";
+import { IAuthUser } from "../../auth/models/auth.dto";
 
 /**
  * Middleware: Authenticate requests using JWT

@@ -1,33 +1,25 @@
 import { Router } from "express";
-import { ControllerProvider } from "../../ControllerProvider";
-import { asyncHandler } from "../../common/utils/asyncHandler";
 import { validateBody } from "../../common/middlewares/validate.middleware";
 import {
   registerUserSchema,
   updatePasswordSchema,
   loginUserSchema,
 } from "../validations/auth.validation";
-import { authenticateJWT } from "../middlewares/auth.middleware";
-// import { requirePermission } from "../middlewares/requirePermission";
+import { authenticateJWT } from "../../common/middlewares/auth.middleware";
+import { asyncHandler } from "../../common/utils/asyncHandler";
+import { AuthController } from "../controllers/auth.controller";
+import { AuthService } from "../services/auth.service";
+import { AuthRepository } from "../repositories/auth.repository";
 
 export const authRouter = Router();
-const authController = ControllerProvider.authController;
+
+// Proper DI chain
+const authRepo = new AuthRepository();
+const authService = new AuthService(authRepo);
+const authController = new AuthController(authService);
 
 /**
- * @route   GET /api/v1/users/current-user
- * @desc    Get details of the logged-in user
- * @access  Private
- */
-authRouter.get(
-  "/me",
-  authenticateJWT,
-  asyncHandler(authController.getCurrentUser.bind(authController))
-);
-
-/**
- * @route   POST /api/v1/auth/register
- * @desc    Register a new user
- * @access  Public
+ * @route POST /api/v1/auth/register
  */
 authRouter.post(
   "/register",
@@ -36,9 +28,7 @@ authRouter.post(
 );
 
 /**
- * @route   POST /api/v1/auth/login
- * @desc    Login and get access + refresh tokens
- * @access  Public
+ * @route POST /api/v1/auth/login
  */
 authRouter.post(
   "/login",
@@ -47,9 +37,7 @@ authRouter.post(
 );
 
 /**
- * @route   POST /api/v1/auth/refresh-token
- * @desc    Refresh access token using a valid refresh token
- * @access  Public
+ * @route POST /api/v1/auth/refresh-token
  */
 authRouter.post(
   "/refresh-token",
@@ -57,9 +45,7 @@ authRouter.post(
 );
 
 /**
- * @route   POST /api/v1/auth/logout
- * @desc    Logout the current user and invalidate tokens
- * @access  Private (Requires user update permission)
+ * @route POST /api/v1/auth/logout
  */
 authRouter.post(
   "/logout",
@@ -68,12 +54,10 @@ authRouter.post(
 );
 
 /**
- * @route   POST /api/v1/auth/change-password
- * @desc    Change password for the logged-in user
- * @access  Private (Requires user update permission)
+ * @route POST /api/v1/auth/:id/change-password
  */
 authRouter.post(
-  "/:userId/change-password",
+  "/:id/change-password",
   authenticateJWT,
   validateBody(updatePasswordSchema),
   asyncHandler(authController.changePassword.bind(authController))

@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const registerUserSchema = z.object({
-    fullName: z
-        .string()
-        .nonempty("Full name is required")
-        .trim()
-        .min(3, "Full name must be at least 3 characters long")
-        .max(50, "Full name must be at most 50 characters long"),
+    // fullName: z
+    //     .string()
+    //     .nonempty("Full name is required")
+    //     .trim()
+    //     .min(3, "Full name must be at least 3 characters long")
+    //     .max(50, "Full name must be at most 50 characters long"),
 
     username: z
         .string()

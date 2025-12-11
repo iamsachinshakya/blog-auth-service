@@ -4,7 +4,7 @@ import { IAuthUserEntity } from "../models/auth.entity";
 export interface IAuthService {
     registerUser(
         data: IRegisterData
-    ): Promise<IAuthUser>;
+    ): Promise<IAuthUserEntity>;
 
     loginUser(data: ILoginCredentials): Promise<{ user: IAuthUserEntity; accessToken: string; refreshToken: string }>;
 

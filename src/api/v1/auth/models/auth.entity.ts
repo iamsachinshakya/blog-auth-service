@@ -28,5 +28,4 @@ export interface IAuthUserEntity {
     refreshToken: string | null;
     createdAt: Date;
     updatedAt: Date;
-    lastLogin: Date | null;
 }

@@ -18,7 +18,6 @@ export async function getUserSeeds() {
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-            lastLogin: null,
         },
         {
             id: crypto.randomUUID(),
@@ -30,7 +29,6 @@ export async function getUserSeeds() {
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-            lastLogin: null,
         },
         {
             id: crypto.randomUUID(),
@@ -42,7 +40,6 @@ export async function getUserSeeds() {
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-            lastLogin: null,
         },
         {
             id: crypto.randomUUID(),
@@ -54,7 +51,6 @@ export async function getUserSeeds() {
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-            lastLogin: null,
         },
     ];
 }
