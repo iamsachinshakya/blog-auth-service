@@ -1,0 +1,20 @@
+CREATE TABLE "users" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"username" varchar(30) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"password" text NOT NULL,
+	"full_name" text NOT NULL,
+	"avatar" text,
+	"bio" varchar(500) DEFAULT '',
+	"role" text DEFAULT 'user' NOT NULL,
+	"status" text DEFAULT 'active' NOT NULL,
+	"is_verified" boolean DEFAULT false NOT NULL,
+	"social_links" jsonb DEFAULT '{"twitter":null,"linkedin":null,"github":null,"website":null}'::jsonb,
+	"followers" jsonb DEFAULT '[]'::jsonb,
+	"following" jsonb DEFAULT '[]'::jsonb,
+	"refresh_token" text,
+	"preferences" jsonb DEFAULT '{"emailNotifications":true,"marketingUpdates":false,"twoFactorAuth":false}'::jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"last_login" timestamp
+);

@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+    env_file: .env.development
+    ports:
+      - "5432:5432"
+
+  maildev:
+    image: maildev/maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+  api:
+    extends:
+      file: docker-compose.yml
+      service: api
+    env_file: .env.development
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    command: ["npm", "run", "dev"] # ts-node-dev / nodemon
