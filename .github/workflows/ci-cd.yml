@@ -34,11 +34,12 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # Skip tests because not written yet
       - name: Test (skipped)
         run: echo "No tests found, skipping..." && exit 0
 
       - name: Docker build (local CI check)
-        run: docker build -t blog-auth-service:ci .
+        run: docker build -f docker/Dockerfile -t blog-auth-service:ci .
 
   publish-image:
     needs: build-and-test
@@ -68,5 +69,9 @@ jobs:
         run: |
           TAG=${GITHUB_REF_NAME}
           IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}
+
           docker buildx build --platform linux/amd64 \
-            -t $IMAGE:$TAG -t $IMAGE:latest . --push
+            -f docker/Dockerfile \
+            -t $IMAGE:$TAG \
+            -t $IMAGE:latest \
+            . --push
