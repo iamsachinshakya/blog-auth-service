@@ -1,22 +1,23 @@
 {
-  "id": "c5879ebf-a5b5-46a5-b405-4a9f102acf22",
+  "id": "42951f36-0b56-430a-9ff7-2d78e2b4b7aa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.users": {
-      "name": "users",
+    "public.auth_users": {
+      "name": "auth_users",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "username": {
           "name": "username",
-          "type": "varchar(30)",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
@@ -32,25 +33,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "full_name": {
-          "name": "full_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "avatar": {
-          "name": "avatar",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "bio": {
-          "name": "bio",
-          "type": "varchar(500)",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
         "role": {
           "name": "role",
           "type": "text",
@@ -65,46 +47,11 @@
           "notNull": true,
           "default": "'active'"
         },
-        "is_verified": {
-          "name": "is_verified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "social_links": {
-          "name": "social_links",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'{\"twitter\":null,\"linkedin\":null,\"github\":null,\"website\":null}'::jsonb"
-        },
-        "followers": {
-          "name": "followers",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'[]'::jsonb"
-        },
-        "following": {
-          "name": "following",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'[]'::jsonb"
-        },
         "refresh_token": {
           "name": "refresh_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "preferences": {
-          "name": "preferences",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'{\"emailNotifications\":true,\"marketingUpdates\":false,\"twoFactorAuth\":false}'::jsonb"
         },
         "created_at": {
           "name": "created_at",

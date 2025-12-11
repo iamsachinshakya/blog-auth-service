@@ -1,33 +1,39 @@
 services:
   db:
-    extends:
-      file: docker-compose.yml
-      service: db
+    image: postgres:16
+    container_name: blog_auth_postgres
+    restart: always
     env_file:
-      - .env.development
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8
+    container_name: blog_auth_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
 
   maildev:
     image: maildev/maildev
+    container_name: blog_auth_mail
+    restart: always
     ports:
-      - "1080:1080"
-      - "1025:1025"
-
-  api:
-    extends:
-      file: docker-compose.yml
-      service: api
-    env_file:
-      - .env.development
-    environment:
-      NODE_ENV: development
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "5000:5000"
-    command: ["npm", "run", "dev"]
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP
 
 volumes:
   dbdata:
