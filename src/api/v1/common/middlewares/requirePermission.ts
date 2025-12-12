@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../../common/utils/apiError";
 import { ErrorCode } from "../../common/constants/errorCodes";
-import { UserRole } from "../../auth/models/auth.entity";
 import { RolePermissions } from "../constants/permission";
+import { UserRole } from "../dto/common.dto";
 
 /**
  * Middleware to check if the authenticated user

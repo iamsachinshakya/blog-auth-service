@@ -15,7 +15,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyToken
-} from "../utils/jwt.util";
+} from "../../common/utils/jwt.util";
 import { IAuthService } from "./auth.service.interface";
 
 export class AuthService implements IAuthService {

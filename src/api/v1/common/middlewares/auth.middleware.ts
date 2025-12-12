@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/apiError";
-import { verifyToken } from "../../auth/utils/jwt.util";
+import { verifyToken } from "../utils/jwt.util";
 import { env } from "../../../../app/config/env";
 import { ErrorCode } from "../constants/errorCodes";
 import { IAuthUser } from "../../auth/models/auth.dto";
