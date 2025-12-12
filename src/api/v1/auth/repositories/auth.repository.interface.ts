@@ -9,5 +9,6 @@ export interface IAuthRepository {
     updateById(
         id: string,
         data: Partial<IAuthUserEntity>
-    ): Promise<IAuthUserEntity | null>
+    ): Promise<IAuthUserEntity | null>;
+    deleteById(id: string): Promise<IAuthUserEntity | null>;
 }

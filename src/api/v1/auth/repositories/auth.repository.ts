@@ -3,6 +3,7 @@ import { IAuthUserEntity } from "../models/auth.entity";
 import { getDB } from "../../../../app/db/connectDB";
 import { authUsers } from "../models/auth.model";
 import { IAuthRepository } from "./auth.repository.interface";
+import { kafkaProducer, UserCreatedEvent } from "../../../../app/kafka/producer";
 
 export class AuthRepository implements IAuthRepository {
 
@@ -10,13 +11,30 @@ export class AuthRepository implements IAuthRepository {
         CREATE USER
     --------------------------------------------------------*/
     async create(data: IAuthUserEntity): Promise<IAuthUserEntity | null> {
-        const [user] = await getDB()
-            .insert(authUsers)
-            .values(data)
-            .returning();
+        const createdUsers = await getDB().transaction(async (tx) => {
+            const [createdUser] = await tx
+                .insert(authUsers)
+                .values(data)
+                .returning();
 
-        return user || null;
+            const event: UserCreatedEvent = {
+                id: data.id,
+                email: data.email,
+                username: data.username,
+                role: data.role,
+                status: data.status,
+                createdAt: data.createdAt,
+            };
+
+            // If Kafka fails, throw inside transaction → will rollback DB
+            await kafkaProducer.publishUserCreated(event);
+
+            return createdUser; // return from transaction callback
+        });
+
+        return createdUsers || null; // return from function
     }
+
 
     /* -------------------------------------------------------
         FIND BY EMAIL
@@ -83,5 +101,17 @@ export class AuthRepository implements IAuthRepository {
             .returning();
 
         return updated || null;
+    }
+
+    /* -------------------------------------------------------
+    DELETE USER BY ID
+--------------------------------------------------------*/
+    async deleteById(id: string): Promise<IAuthUserEntity | null> {
+        const [deletedUser] = await getDB()
+            .delete(authUsers)
+            .where(eq(authUsers.id, id))
+            .returning(); // return the deleted row if needed
+
+        return deletedUser || null;
     }
 }

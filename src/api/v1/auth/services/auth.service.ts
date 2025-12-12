@@ -1,5 +1,4 @@
 import { env } from "../../../../app/config/env";
-import { sendUserCreatedEvent } from "../../../../app/kafka/producer";
 import { ErrorCode } from "../../common/constants/errorCodes";
 import { ApiError } from "../../common/utils/apiError";
 import { getUID } from "../../common/utils/common.util";
@@ -84,18 +83,6 @@ export class AuthService implements IAuthService {
         ErrorCode.USER_REGISTRATION_FAILED
       );
     }
-
-    // ------------------------------
-    // Publish event asynchronously
-    // ------------------------------
-    void sendUserCreatedEvent({
-      id: createdUser.id,
-      email: createdUser.email,
-      username: createdUser.username,
-      role: createdUser.role,
-      status: createdUser.status,
-      createdAt: createdUser.createdAt,
-    });
 
     return this.toEntity(createdUser); // sanitize before returning
   }

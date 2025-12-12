@@ -30,42 +30,12 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      KAFKA_BROKER: kafka:9092
-      KAFKA_CLIENT_ID: auth-service
-      KAFKA_GROUP_ID: user-service-group
     ports:
-      - "80:5000"
+      - "80:5000" # external port 80 → container port 5000
     depends_on:
       db:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
-    command: ["node", "dist/index.js"]
-
-  kafka:
-    image: confluentinc/cp-kafka:7.9.1
-    container_name: blog_auth_kafka
-    restart: unless-stopped
-    ports:
-      - "9092:9092"
-    environment:
-      # KRaft mode config (works without Zookeeper)
-      KAFKA_PROCESS_ROLES: "broker,controller"
-      KAFKA_NODE_ID: "1"
-      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
-      KAFKA_NUM_PARTITIONS: 3
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_LOG_DIRS: "/kafka-logs"
-    volumes:
-      - kafka-data:/kafka-logs
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    command: ["node", "dist/index.js"] # run compiled JS
 
 volumes:
   dbdata:
-  kafka-data:

@@ -1,50 +1,47 @@
-// src/index.ts
 import app from "./app/app";
 import { env } from "./app/config/env";
 import { connectDB } from "./app/db/connectDB";
+import { kafkaProducer } from "./app/kafka/producer";
 import logger from "./app/utils/logger";
 
-/**
- * 🧩 Handle uncaught synchronous exceptions
- * These happen outside of promises and can crash the app immediately.
- */
 process.on("uncaughtException", (err: Error) => {
     logger.error("💥 Uncaught Exception! Shutting down...");
     logger.error(err.stack || err.message);
     process.exit(1);
 });
 
-// ✅ Start server only after successful DB connection
 const startServer = async () => {
     try {
+        // 1️⃣ Connect DB
         await connectDB();
 
+        // 2️⃣ Connect Kafka producer
+        await kafkaProducer.connect();
+
+        // 3️⃣ Start server
         const server = app.listen(env.PORT, () => {
             logger.info(`🚀 Server running on http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
         });
 
-        /**
-         * 🧩 Handle unhandled promise rejections
-         * Example: failed DB connection or network error not caught.
-         */
-        process.on("unhandledRejection", (err: any) => {
+        // 4️⃣ Handle unhandled promise rejections
+        process.on("unhandledRejection", async (err: any) => {
             logger.error("💥 Unhandled Rejection! Shutting down...");
             logger.error(err?.stack || err);
 
-            // Gracefully close server before exiting
+            await kafkaProducer.disconnect();
             server.close(() => process.exit(1));
         });
 
-        /**
-         * 🧩 Handle SIGTERM (graceful shutdown)
-         * Useful for production (e.g., Docker, PM2, Kubernetes)
-         */
-        process.on("SIGTERM", () => {
-            logger.info("👋 SIGTERM RECEIVED. Shutting down gracefully...");
-            server.close(() => {
-                logger.info("💤 Process terminated!");
-            });
-        });
+        // 5️⃣ Graceful shutdown on SIGTERM / SIGINT
+        const shutdown = async () => {
+            logger.info("👋 SIGTERM/SIGINT received. Shutting down gracefully...");
+            await kafkaProducer.disconnect();
+            server.close(() => logger.info("💤 Server and Kafka producer stopped"));
+        };
+
+        process.on("SIGTERM", shutdown);
+        process.on("SIGINT", shutdown);
+
     } catch (err: any) {
         logger.error("❌ Failed to start server:", err?.stack || err.message);
         process.exit(1);
