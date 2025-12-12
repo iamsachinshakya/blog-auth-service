@@ -37,6 +37,9 @@ const envSchema = z.object({
     REDIS_PORT: z.string().optional(),
     REDIS_PASSWORD: z.string().optional(),
     REDIS_URL: z.string().optional(),
+
+    KAFKA_BROKER: z.string().default("localhost:9092"),
+    KAFKA_CLIENT_ID: z.string().default("auth-service"),
 });
 
 const parsed = envSchema.safeParse(process.env);

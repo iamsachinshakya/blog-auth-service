@@ -35,5 +35,31 @@ services:
       - "1080:1080" # Web UI
       - "1025:1025" # SMTP
 
+  kafka:
+    image: confluentinc/cp-kafka:7.9.1
+    container_name: blog_auth_kafka
+    restart: always
+    ports:
+      - "9092:9092" # Kafka broker
+      - "9581:9581" # Controller (KRaft)
+    environment:
+      KAFKA_KRAFT_MODE: "true"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9581
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9581"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: "/kafka-logs"
+    volumes:
+      - kafka-data:/kafka-logs
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   dbdata:
+  kafka-data:
