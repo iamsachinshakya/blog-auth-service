@@ -15,19 +15,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:8
-    container_name: blog_auth_redis
-    restart: always
-    ports:
-      - "6381:6379"
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   maildev:
     image: maildev/maildev
     container_name: blog_auth_mail

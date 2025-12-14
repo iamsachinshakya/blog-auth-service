@@ -14,9 +14,21 @@ import { AuthRepository } from "../repositories/auth.repository";
 export const authRouter = Router();
 
 // Proper DI chain
-const authRepo = new AuthRepository();
-const authService = new AuthService(authRepo);
+const authRepository = new AuthRepository();
+const authService = new AuthService(authRepository);
 const authController = new AuthController(authService);
+
+
+/**
+ * @route   GET /api/v1/auth/current-user
+ * @desc    Get details of the logged-in user
+ * @access  Private
+ */
+authRouter.get(
+  "/me",
+  authenticateJWT,
+  asyncHandler(authController.getCurrentUser.bind(authController))
+);
 
 /**
  * @route POST /api/v1/auth/register

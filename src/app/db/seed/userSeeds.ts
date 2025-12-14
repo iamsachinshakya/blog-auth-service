@@ -2,7 +2,8 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-import { UserRole, UserStatus } from "../../../api/v1/auth/models/auth.entity";
+import { UserRole } from "../../../api/v1/auth/models/auth.entity";
+import { AuthStatus } from "../../../api/v1/common/models/common.dto";
 
 export async function getUserSeeds() {
     const hashedPassword = await bcrypt.hash("password123", 10);
@@ -14,7 +15,7 @@ export async function getUserSeeds() {
             email: "john@example.com",
             password: hashedPassword,
             role: UserRole.USER,
-            status: UserStatus.ACTIVE,
+            status: AuthStatus.ACTIVE,
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -25,7 +26,7 @@ export async function getUserSeeds() {
             email: "editor@example.com",
             password: hashedPassword,
             role: UserRole.EDITOR,
-            status: UserStatus.PENDING,
+            status: AuthStatus.PENDING,
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -36,7 +37,7 @@ export async function getUserSeeds() {
             email: "author@example.com",
             password: hashedPassword,
             role: UserRole.AUTHOR,
-            status: UserStatus.ACTIVE,
+            status: AuthStatus.ACTIVE,
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -47,7 +48,7 @@ export async function getUserSeeds() {
             email: "admin@example.com",
             password: hashedPassword,
             role: UserRole.ADMIN,
-            status: UserStatus.ACTIVE,
+            status: AuthStatus.ACTIVE,
             refreshToken: null,
             createdAt: new Date(),
             updatedAt: new Date(),

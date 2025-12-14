@@ -1,16 +1,16 @@
 import { eq } from "drizzle-orm";
-import { IAuthUserEntity } from "../models/auth.entity";
 import { getDB } from "../../../../app/db/connectDB";
 import { authUsers } from "../models/auth.model";
 import { IAuthRepository } from "./auth.repository.interface";
 import { kafkaProducer, UserCreatedEvent } from "../../../../app/kafka/producer";
+import { IAuthEntity } from "../models/auth.entity";
 
 export class AuthRepository implements IAuthRepository {
 
     /* -------------------------------------------------------
         CREATE USER
     --------------------------------------------------------*/
-    async create(data: IAuthUserEntity): Promise<IAuthUserEntity | null> {
+    async create(data: IAuthEntity): Promise<IAuthEntity | null> {
         const createdUsers = await getDB().transaction(async (tx) => {
             const [createdUser] = await tx
                 .insert(authUsers)
@@ -39,7 +39,7 @@ export class AuthRepository implements IAuthRepository {
     /* -------------------------------------------------------
         FIND BY EMAIL
     --------------------------------------------------------*/
-    async findByEmail(email: string): Promise<IAuthUserEntity | null> {
+    async findByEmail(email: string): Promise<IAuthEntity | null> {
         const [user] = await getDB()
             .select()
             .from(authUsers)
@@ -51,7 +51,7 @@ export class AuthRepository implements IAuthRepository {
     /* -------------------------------------------------------
         FIND BY USERNAME
     --------------------------------------------------------*/
-    async findByUsername(username: string): Promise<IAuthUserEntity | null> {
+    async findByUsername(username: string): Promise<IAuthEntity | null> {
         const normalized = username.trim().toLowerCase();
 
         const [user] = await getDB()
@@ -65,7 +65,7 @@ export class AuthRepository implements IAuthRepository {
     /* -------------------------------------------------------
         FIND BY ID
     --------------------------------------------------------*/
-    async findById(id: string): Promise<IAuthUserEntity | null> {
+    async findById(id: string): Promise<IAuthEntity | null> {
         const [user] = await getDB()
             .select()
             .from(authUsers)
@@ -77,7 +77,7 @@ export class AuthRepository implements IAuthRepository {
     /* -------------------------------------------------------
         REMOVE REFRESH TOKEN
     --------------------------------------------------------*/
-    async removeRefreshTokenById(id: string): Promise<IAuthUserEntity | null> {
+    async removeRefreshTokenById(id: string): Promise<IAuthEntity | null> {
         const [updated] = await getDB()
             .update(authUsers)
             .set({ refreshToken: null, updatedAt: new Date() }) // clear refresh token
@@ -92,8 +92,8 @@ export class AuthRepository implements IAuthRepository {
    --------------------------------------------------------*/
     async updateById(
         id: string,
-        data: Partial<IAuthUserEntity>
-    ): Promise<IAuthUserEntity | null> {
+        data: Partial<IAuthEntity>
+    ): Promise<IAuthEntity | null> {
         const [updated] = await getDB()
             .update(authUsers)
             .set({ ...data, updatedAt: new Date() }) // always update `updatedAt`
@@ -106,7 +106,7 @@ export class AuthRepository implements IAuthRepository {
     /* -------------------------------------------------------
     DELETE USER BY ID
 --------------------------------------------------------*/
-    async deleteById(id: string): Promise<IAuthUserEntity | null> {
+    async deleteById(id: string): Promise<IAuthEntity | null> {
         const [deletedUser] = await getDB()
             .delete(authUsers)
             .where(eq(authUsers.id, id))

@@ -1,3 +1,5 @@
+import { ICreateDto, AuthStatus } from "../../common/models/common.dto";
+
 export enum UserRole {
     USER = "user",
     EDITOR = "editor",
@@ -5,27 +7,18 @@ export enum UserRole {
     ADMIN = "admin",
 }
 
-export enum UserStatus {
-    ACTIVE = "active",
-    INACTIVE = "inactive",
-    PENDING = "pending",       // user registered but not verified
-    SUSPENDED = "suspended",   // temporarily blocked
-    DELETED = "deleted",       // account deleted
-    BANNED = "banned"          // permanently banned
-}
-
-
 /**
  * Pure domain model — DB agnostic
  */
-export interface IAuthUserEntity {
+
+export interface IAuthEntity extends ICreateDto {
     id: string;
-    username: string;
+    username: string;        // UNIQUE, login identifier
     email: string;
     password: string;
     role: UserRole;
-    status: UserStatus;
+    status: AuthStatus;
+    isVerified: boolean;
     refreshToken: string | null;
-    createdAt: Date;
-    updatedAt: Date;
 }
+

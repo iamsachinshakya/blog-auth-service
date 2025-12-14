@@ -3,12 +3,11 @@ import { ErrorCode } from "../../common/constants/errorCodes";
 import { ApiError } from "../../common/utils/apiError";
 import { getUID } from "../../common/utils/common.util";
 import {
-  IAuthUser,
   IChangePassword,
   ILoginCredentials,
   IRegisterData
 } from "../models/auth.dto";
-import { IAuthUserEntity, UserRole, UserStatus } from "../models/auth.entity";
+import { IAuthEntity, UserRole } from "../models/auth.entity";
 import { IAuthRepository } from "../repositories/auth.repository.interface";
 import { comparePassword, hashPassword } from "../utils/bcrypt.util";
 import {
@@ -17,6 +16,7 @@ import {
   verifyToken
 } from "../../common/utils/jwt.util";
 import { IAuthService } from "./auth.service.interface";
+import { IAuthUser, AuthStatus } from "../../common/models/common.dto";
 
 export class AuthService implements IAuthService {
   constructor(private readonly authRepo: IAuthRepository) { }
@@ -25,7 +25,7 @@ export class AuthService implements IAuthService {
       REGISTER USER
   --------------------------------------------------------*/
 
-  async registerUser(data: IRegisterData): Promise<IAuthUserEntity> {
+  async registerUser(data: IRegisterData): Promise<IAuthEntity> {
     const { email, username, password, role } = data;
 
     if (!email || !username || !password) {
@@ -63,16 +63,17 @@ export class AuthService implements IAuthService {
       );
     }
 
-    const newUser: IAuthUserEntity = {
+    const newUser: IAuthEntity = {
       id: getUID(),
       email,
       username: username.toLowerCase(),
       password: hashedPassword,
       role: role || UserRole.USER,
       refreshToken: null,
-      status: UserStatus.ACTIVE,
       createdAt: new Date(),
       updatedAt: new Date(),
+      status: AuthStatus.ACTIVE,
+      isVerified: false
     };
 
     const createdUser = await this.authRepo.create(newUser);
@@ -93,7 +94,7 @@ export class AuthService implements IAuthService {
   --------------------------------------------------------*/
   async loginUser(
     data: ILoginCredentials
-  ): Promise<{ user: IAuthUserEntity; accessToken: string; refreshToken: string }> {
+  ): Promise<{ user: IAuthEntity; accessToken: string; refreshToken: string }> {
     const { email, password } = data;
 
     if (!email || !password) {
@@ -112,6 +113,10 @@ export class AuthService implements IAuthService {
       throw new ApiError("Invalid credentials", 401, ErrorCode.INVALID_CREDENTIALS);
     }
 
+    if (user.status !== AuthStatus.ACTIVE) {
+      throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
+    }
+
     const tokens = await this.generateTokenAndAddToUser(user.id);
 
     // fetch updated user (with refresh token)
@@ -127,7 +132,7 @@ export class AuthService implements IAuthService {
   /* -------------------------------------------------------
       LOGOUT USER
   --------------------------------------------------------*/
-  async logoutUser(userId: string): Promise<IAuthUserEntity | null> {
+  async logoutUser(userId: string): Promise<IAuthEntity | null> {
     if (!userId) throw new ApiError("User ID is required", 400, ErrorCode.VALIDATION_ERROR);
 
     const user = await this.authRepo.removeRefreshTokenById(userId);
@@ -145,6 +150,16 @@ export class AuthService implements IAuthService {
 
     const user = await this.authRepo.findById(decoded.id);
     if (!user) throw new ApiError("User not found", 401, ErrorCode.TOKEN_INVALID);
+
+
+    if (user.refreshToken === null) {
+      throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
+    }
+
+    if (user.status !== AuthStatus.ACTIVE) {
+      throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
+    }
+
     if (incomingRefreshToken !== user.refreshToken) {
       throw new ApiError("Refresh token mismatch or expired", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
     }
@@ -153,7 +168,8 @@ export class AuthService implements IAuthService {
       id: user.id,
       email: user.email,
       role: user.role,
-      status: user.status
+      status: user.status,
+      username: user.username
     };
 
     return { accessToken: generateAccessToken(payload) };
@@ -167,6 +183,14 @@ export class AuthService implements IAuthService {
 
     const user = await this.authRepo.findById(userId);
     if (!user || !user.password) throw new ApiError("User not found or invalid", 404, ErrorCode.USER_NOT_FOUND);
+
+    if (user.refreshToken === null) {
+      throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
+    }
+
+    if (user.status !== AuthStatus.ACTIVE) {
+      throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
+    }
 
     if (!(await comparePassword(oldPassword, user.password))) {
       throw new ApiError("Invalid credentials", 401, ErrorCode.INVALID_CREDENTIALS);
@@ -191,7 +215,8 @@ export class AuthService implements IAuthService {
       id: user.id,
       email: user.email,
       role: user.role,
-      status: user.status
+      status: user.status,
+      username: user.username
     };
 
     const accessToken = generateAccessToken(payload);
@@ -205,10 +230,10 @@ export class AuthService implements IAuthService {
   /* -------------------------------------------------------
         ENTITY TRANSFORMER
   --------------------------------------------------------*/
-  private toEntity(record: any, includeSensitive = false): IAuthUserEntity {
+  private toEntity(record: any, includeSensitive = false): IAuthEntity {
     const { password, refreshToken, ...safe } = record;
 
-    const entity: IAuthUserEntity = {
+    const entity: IAuthEntity = {
       ...safe,
       id: record.id.toString(),
       createdAt: record.createdAt,

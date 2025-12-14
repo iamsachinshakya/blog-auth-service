@@ -14,6 +14,16 @@ export class AuthController implements IAuthController {
     return ApiResponse.success(res, "User registered successfully", user, 201);
   }
 
+  async getCurrentUser(req: Request, res: Response): Promise<Response> {
+    const user = req.user;
+
+    if (!user) {
+      throw new ApiError("User missing", 400, ErrorCode.BAD_REQUEST);
+    }
+    return ApiResponse.success(res, "Current user fetched successfully", user);
+  }
+
+
   async login(req: Request, res: Response): Promise<Response> {
     const { user, accessToken, refreshToken } =
       await this.authService.loginUser(req.body);

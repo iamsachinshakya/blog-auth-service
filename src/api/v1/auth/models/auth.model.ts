@@ -3,9 +3,11 @@ import {
     uuid,
     text,
     varchar,
-    timestamp
+    timestamp,
+    boolean
 } from "drizzle-orm/pg-core";
-import { UserRole, UserStatus } from "./auth.entity";
+import { UserRole } from "./auth.entity";
+import { AuthStatus } from "../../common/models/common.dto";
 
 export const authUsers = pgTable("auth_users", {
     id: uuid("id")
@@ -22,8 +24,12 @@ export const authUsers = pgTable("auth_users", {
         .notNull(),
 
     status: text("status")
-        .$type<UserStatus>()
-        .default(UserStatus.ACTIVE)
+        .$type<AuthStatus>()
+        .default(AuthStatus.ACTIVE)
+        .notNull(),
+
+    isVerified: boolean("is_verified")
+        .default(false)
         .notNull(),
 
     refreshToken: text("refresh_token"),
