@@ -1,18 +1,49 @@
 import { IChangePassword, ILoginCredentials, IRegisterData } from "../models/auth.dto";
 import { IAuthEntity } from "../models/auth.entity";
 
+/**
+ * Interface for Auth service.
+ * Defines business logic methods for authentication and user management.
+ */
 export interface IAuthService {
-    registerUser(
-        data: IRegisterData
-    ): Promise<IAuthEntity>;
+    /**
+     * Register a new user.
+     * @param data - The registration data including email, username, password, etc.
+     * @returns A Promise resolving to the newly created user entity.
+     */
+    registerUser(data: IRegisterData): Promise<IAuthEntity>;
 
-    loginUser(data: ILoginCredentials): Promise<{ user: IAuthEntity; accessToken: string; refreshToken: string }>;
+    /**
+     * Authenticate a user with credentials.
+     * @param data - The login credentials including email/username and password.
+     * @returns A Promise resolving to an object containing the authenticated user,
+     *          an access token, and a refresh token.
+     */
+    loginUser(data: ILoginCredentials): Promise<{
+        user: IAuthEntity;
+        accessToken: string;
+        refreshToken: string;
+    }>;
 
-    logoutUser(userId: string): Promise<IAuthEntity | null>;
+    /**
+     * Logout a user by clearing any active sessions or tokens.
+     * @param userId - The unique ID of the user to logout.
+     * @returns A Promise resolving to the updated user entity.
+     */
+    logoutUser(userId: string): Promise<IAuthEntity>;
 
-    refreshAccessToken(
-        incomingRefreshToken: string
-    ): Promise<{ accessToken: string }>;
+    /**
+     * Generate a new access token using a valid refresh token.
+     * @param incomingRefreshToken - The refresh token provided by the client.
+     * @returns A Promise resolving to an object containing the new access token.
+     */
+    refreshAccessToken(incomingRefreshToken: string): Promise<{ accessToken: string }>;
 
-    changeUserPassword(data: IChangePassword, userId: string): Promise<void>;
+    /**
+     * Change the password of a user.
+     * @param data - The old and new password information.
+     * @param userId - The unique ID of the user whose password is to be changed.
+     * @returns A Promise resolving to `true` if the password was successfully changed, otherwise `false`.
+     */
+    changeUserPassword(data: IChangePassword, userId: string): Promise<boolean>;
 }

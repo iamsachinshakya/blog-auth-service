@@ -18,12 +18,14 @@ import {
 import { IAuthService } from "./auth.service.interface";
 import { IAuthUser, AuthStatus } from "../../common/models/common.dto";
 
+/**
+ * AuthService
+ * Handles all authentication-related business logic such as
+ * registering, logging in, logging out, refreshing tokens,
+ * and changing passwords.
+ */
 export class AuthService implements IAuthService {
-  constructor(private readonly authRepo: IAuthRepository) { }
-
-  /* -------------------------------------------------------
-      REGISTER USER
-  --------------------------------------------------------*/
+  constructor(private readonly authRepository: IAuthRepository) { }
 
   async registerUser(data: IRegisterData): Promise<IAuthEntity> {
     const { email, username, password, role } = data;
@@ -36,31 +38,17 @@ export class AuthService implements IAuthService {
       );
     }
 
-    // check email exists
-    if (await this.authRepo.findByEmail(email)) {
-      throw new ApiError(
-        "Email already exists",
-        409,
-        ErrorCode.USER_ALREADY_EXISTS
-      );
+    if (await this.authRepository.findByEmail(email)) {
+      throw new ApiError("Email already exists", 409, ErrorCode.USER_ALREADY_EXISTS);
     }
 
-    // check username exists
-    if (await this.authRepo.findByUsername(username)) {
-      throw new ApiError(
-        "Username already exists",
-        409,
-        ErrorCode.USER_ALREADY_EXISTS
-      );
+    if (await this.authRepository.findByUsername(username)) {
+      throw new ApiError("Username already exists", 409, ErrorCode.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await hashPassword(password);
     if (!hashedPassword) {
-      throw new ApiError(
-        "Failed to hash password",
-        500,
-        ErrorCode.PASSWORD_HASH_FAILED
-      );
+      throw new ApiError("Failed to hash password", 500, ErrorCode.PASSWORD_HASH_FAILED);
     }
 
     const newUser: IAuthEntity = {
@@ -76,36 +64,24 @@ export class AuthService implements IAuthService {
       isVerified: false
     };
 
-    const createdUser = await this.authRepo.create(newUser);
+    const createdUser = await this.authRepository.create(newUser);
     if (!createdUser) {
-      throw new ApiError(
-        "User registration failed",
-        500,
-        ErrorCode.USER_REGISTRATION_FAILED
-      );
+      throw new ApiError("User registration failed", 500, ErrorCode.USER_REGISTRATION_FAILED);
     }
 
-    return this.toEntity(createdUser); // sanitize before returning
+    return this.toEntity(createdUser);
   }
 
-
-  /* -------------------------------------------------------
-      LOGIN USER
-  --------------------------------------------------------*/
   async loginUser(
     data: ILoginCredentials
   ): Promise<{ user: IAuthEntity; accessToken: string; refreshToken: string }> {
     const { email, password } = data;
 
     if (!email || !password) {
-      throw new ApiError(
-        "Email and password are required",
-        400,
-        ErrorCode.VALIDATION_ERROR
-      );
+      throw new ApiError("Email and password are required", 400, ErrorCode.VALIDATION_ERROR);
     }
 
-    const user = await this.authRepo.findByEmail(email);
+    const user = await this.authRepository.findByEmail(email);
     if (!user) throw new ApiError("User not found", 404, ErrorCode.USER_NOT_FOUND);
     if (!user.password) throw new ApiError("User password missing", 500, ErrorCode.INTERNAL_SERVER_ERROR);
 
@@ -119,8 +95,7 @@ export class AuthService implements IAuthService {
 
     const tokens = await this.generateTokenAndAddToUser(user.id);
 
-    // fetch updated user (with refresh token)
-    const updatedUser = await this.authRepo.findById(user.id);
+    const updatedUser = await this.authRepository.findById(user.id);
     if (!updatedUser) throw new ApiError("User not found after login", 404, ErrorCode.USER_NOT_FOUND);
 
     return {
@@ -129,14 +104,13 @@ export class AuthService implements IAuthService {
     };
   }
 
-  /* -------------------------------------------------------
-      LOGOUT USER
-  --------------------------------------------------------*/
-  async logoutUser(userId: string): Promise<IAuthEntity | null> {
+
+  async logoutUser(userId: string): Promise<IAuthEntity> {
     if (!userId) throw new ApiError("User ID is required", 400, ErrorCode.VALIDATION_ERROR);
 
-    const user = await this.authRepo.removeRefreshTokenById(userId);
-    return this.toEntity(user, true);
+    const user = await this.authRepository.removeRefreshTokenById(userId);
+    if (!user) throw new ApiError("fail to logout user!", 500, ErrorCode.INTERNAL_SERVER_ERROR);
+    return this.toEntity(user, false);
   }
 
   /* -------------------------------------------------------
@@ -148,20 +122,15 @@ export class AuthService implements IAuthService {
     const decoded = verifyToken(incomingRefreshToken, env.REFRESH_TOKEN_SECRET);
     if (!decoded?.id) throw new ApiError("Invalid refresh token", 401, ErrorCode.TOKEN_INVALID);
 
-    const user = await this.authRepo.findById(decoded.id);
+    const user = await this.authRepository.findById(decoded.id);
     if (!user) throw new ApiError("User not found", 401, ErrorCode.TOKEN_INVALID);
 
-
-    if (user.refreshToken === null) {
-      throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
+    if (!user.refreshToken || incomingRefreshToken !== user.refreshToken) {
+      throw new ApiError("Refresh token mismatch or expired", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
     }
 
     if (user.status !== AuthStatus.ACTIVE) {
       throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
-    }
-
-    if (incomingRefreshToken !== user.refreshToken) {
-      throw new ApiError("Refresh token mismatch or expired", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
     }
 
     const payload: IAuthUser = {
@@ -169,7 +138,8 @@ export class AuthService implements IAuthService {
       email: user.email,
       role: user.role,
       status: user.status,
-      username: user.username
+      username: user.username,
+      isVerified: user.isVerified
     };
 
     return { accessToken: generateAccessToken(payload) };
@@ -178,28 +148,22 @@ export class AuthService implements IAuthService {
   /* -------------------------------------------------------
       CHANGE PASSWORD
   --------------------------------------------------------*/
-  async changeUserPassword(data: IChangePassword, userId: string): Promise<void> {
+  async changeUserPassword(data: IChangePassword, userId: string): Promise<boolean> {
     const { oldPassword, newPassword } = data;
 
-    const user = await this.authRepo.findById(userId);
+    const user = await this.authRepository.findById(userId);
     if (!user || !user.password) throw new ApiError("User not found or invalid", 404, ErrorCode.USER_NOT_FOUND);
 
-    if (user.refreshToken === null) {
-      throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
-    }
-
-    if (user.status !== AuthStatus.ACTIVE) {
-      throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
-    }
-
-    if (!(await comparePassword(oldPassword, user.password))) {
-      throw new ApiError("Invalid credentials", 401, ErrorCode.INVALID_CREDENTIALS);
-    }
+    if (!user.refreshToken) throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
+    if (user.status !== AuthStatus.ACTIVE) throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
+    if (!(await comparePassword(oldPassword, user.password))) throw new ApiError("Invalid credentials", 401, ErrorCode.INVALID_CREDENTIALS);
 
     const hashed = await hashPassword(newPassword);
     if (!hashed) throw new ApiError("Password hashing failed", 500, ErrorCode.PASSWORD_HASH_FAILED);
 
-    await this.authRepo.updateById(user.id, { password: hashed });
+    const updateRes = await this.authRepository.updateById(user.id, { password: hashed });
+    if (!updateRes) throw new ApiError("Fail to change your password!", 500, ErrorCode.INTERNAL_SERVER_ERROR);
+    return true;
   }
 
   /* -------------------------------------------------------
@@ -208,7 +172,7 @@ export class AuthService implements IAuthService {
   private async generateTokenAndAddToUser(
     userId: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await this.authRepo.findById(userId);
+    const user = await this.authRepository.findById(userId);
     if (!user) throw new ApiError("User not found", 404, ErrorCode.USER_NOT_FOUND);
 
     const payload: IAuthUser = {
@@ -216,14 +180,15 @@ export class AuthService implements IAuthService {
       email: user.email,
       role: user.role,
       status: user.status,
-      username: user.username
+      username: user.username,
+      isVerified: user.isVerified
     };
 
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken({ id: user.id });
 
-    // save refresh token
-    await this.authRepo.updateById(user.id, { refreshToken, updatedAt: new Date() });
+    const updateRes = await this.authRepository.updateById(user.id, { refreshToken, updatedAt: new Date() });
+    if (!updateRes) throw new ApiError("Fail to update generate token!", 500, ErrorCode.INTERNAL_SERVER_ERROR)
     return { accessToken, refreshToken };
   }
 
