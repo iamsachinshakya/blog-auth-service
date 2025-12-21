@@ -1,1 +1,0 @@
-ALTER TABLE "auth_users" DROP COLUMN "last_login";

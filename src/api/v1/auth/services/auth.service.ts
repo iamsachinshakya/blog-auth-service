@@ -3,20 +3,21 @@ import { ErrorCode } from "../../common/constants/errorCodes";
 import { ApiError } from "../../common/utils/apiError";
 import { getUID } from "../../common/utils/common.util";
 import {
+  IAuthUser,
   IChangePassword,
   ILoginCredentials,
-  IRegisterData
+  IRegisterData,
+  IResetPassword
 } from "../models/auth.dto";
-import { IAuthEntity, UserRole } from "../models/auth.entity";
+import { AuthStatus, IAuthEntity, UserRole } from "../models/auth.entity";
 import { IAuthRepository } from "../repositories/auth.repository.interface";
 import { comparePassword, hashPassword } from "../utils/bcrypt.util";
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyToken
-} from "../../common/utils/jwt.util";
+} from "../utils/jwt.util";
 import { IAuthService } from "./auth.service.interface";
-import { IAuthUser, AuthStatus } from "../../common/models/common.dto";
 
 /**
  * AuthService
@@ -146,19 +147,35 @@ export class AuthService implements IAuthService {
   }
 
   /* -------------------------------------------------------
-      CHANGE PASSWORD
+      CHANGE PASSWORD BY ADMIN
   --------------------------------------------------------*/
   async changeUserPassword(data: IChangePassword, userId: string): Promise<boolean> {
-    const { oldPassword, newPassword } = data;
+    const { password } = data;
 
     const user = await this.authRepository.findById(userId);
-    if (!user || !user.password) throw new ApiError("User not found or invalid", 404, ErrorCode.USER_NOT_FOUND);
-
-    if (!user.refreshToken) throw new ApiError("No refresh token found for user", 401, ErrorCode.REFRESH_TOKEN_MISMATCH);
+    if (!user) throw new ApiError("User not found or invalid", 404, ErrorCode.USER_NOT_FOUND);
     if (user.status !== AuthStatus.ACTIVE) throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
-    if (!(await comparePassword(oldPassword, user.password))) throw new ApiError("Invalid credentials", 401, ErrorCode.INVALID_CREDENTIALS);
 
-    const hashed = await hashPassword(newPassword);
+    const hashed = await hashPassword(password);
+    if (!hashed) throw new ApiError("Password hashing failed", 500, ErrorCode.PASSWORD_HASH_FAILED);
+
+    const updateRes = await this.authRepository.updateById(user.id, { password: hashed });
+    if (!updateRes) throw new ApiError("Fail to change your password!", 500, ErrorCode.INTERNAL_SERVER_ERROR);
+    return true;
+  }
+
+
+  /* -------------------------------------------------------
+    RESET PASSWORD BY USER
+--------------------------------------------------------*/
+  async resetPassword(data: IResetPassword): Promise<boolean> {
+    const { email, password } = data;
+
+    const user = await this.authRepository.findByEmail(email);
+    if (!user) throw new ApiError("User not found or invalid", 404, ErrorCode.USER_NOT_FOUND);
+    if (user.status !== AuthStatus.ACTIVE) throw new ApiError("User account is not active", 403, ErrorCode.USER_INACTIVE);
+
+    const hashed = await hashPassword(password);
     if (!hashed) throw new ApiError("Password hashing failed", 500, ErrorCode.PASSWORD_HASH_FAILED);
 
     const updateRes = await this.authRepository.updateById(user.id, { password: hashed });

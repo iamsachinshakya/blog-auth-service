@@ -1,4 +1,13 @@
-import { ICreateDto, AuthStatus } from "../../common/models/common.dto";
+import { ICreateDto } from "../../common/models/common.dto";
+
+export enum AuthStatus {
+    ACTIVE = "active",
+    INACTIVE = "inactive",
+    PENDING = "pending",       // user registered but not verified
+    SUSPENDED = "suspended",   // temporarily blocked
+    DELETED = "deleted",       // account deleted
+    BANNED = "banned"          // permanently banned
+}
 
 export enum UserRole {
     USER = "user",

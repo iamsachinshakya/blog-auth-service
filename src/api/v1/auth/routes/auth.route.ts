@@ -2,14 +2,17 @@ import { Router } from "express";
 import { validateBody } from "../../common/middlewares/validate.middleware";
 import {
   registerUserSchema,
-  updatePasswordSchema,
   loginUserSchema,
+  resetPasswordSchema,
+  changeUserPasswordSchema,
 } from "../validations/auth.validation";
-import { authenticateJWT } from "../../common/middlewares/auth.middleware";
 import { asyncHandler } from "../../common/utils/asyncHandler";
 import { AuthController } from "../controllers/auth.controller";
 import { AuthService } from "../services/auth.service";
 import { AuthRepository } from "../repositories/auth.repository";
+import { authenticate } from "../middlewares/auth.middleware";
+import { authorize } from "../../permissions/middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../permissions/constants/permission";
 
 export const authRouter = Router();
 
@@ -18,7 +21,6 @@ const authRepository = new AuthRepository();
 const authService = new AuthService(authRepository);
 const authController = new AuthController(authService);
 
-
 /**
  * @route   GET /api/v1/auth/current-user
  * @desc    Get details of the logged-in user
@@ -26,7 +28,7 @@ const authController = new AuthController(authService);
  */
 authRouter.get(
   "/me",
-  authenticateJWT,
+  authenticate,
   asyncHandler(authController.getCurrentUser.bind(authController))
 );
 
@@ -61,18 +63,28 @@ authRouter.post(
  */
 authRouter.post(
   "/logout",
-  authenticateJWT,
+  authenticate,
   asyncHandler(authController.logout.bind(authController))
 );
 
 /**
- * @route POST /api/v1/auth/:id/change-password
+ * Logout User changes own password
+ * @route POST /api/v1/auth/me/change-password
  */
 authRouter.post(
-  "/:id/change-password",
-  authenticateJWT,
-  validateBody(updatePasswordSchema),
-  asyncHandler(authController.changePassword.bind(authController))
+  "/reset-password",
+  validateBody(resetPasswordSchema),
+  asyncHandler(authController.resetPassword.bind(authController))
 );
 
-export default authRouter;
+/**
+ * Admin resets user password
+ * @route POST /api/v1/auth/users/:id/change-password
+ */
+authRouter.post(
+  "/users/:id/change-password",
+  authenticate,
+  authorize(PERMISSIONS.AUTH.CHANGE_PASSWORD),
+  validateBody(changeUserPasswordSchema),
+  asyncHandler(authController.changeUserPassword.bind(authController))
+);

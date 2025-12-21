@@ -1,4 +1,4 @@
-import { IChangePassword, ILoginCredentials, IRegisterData } from "../models/auth.dto";
+import { IChangePassword, ILoginCredentials, IRegisterData, IResetPassword } from "../models/auth.dto";
 import { IAuthEntity } from "../models/auth.entity";
 
 /**
@@ -41,9 +41,16 @@ export interface IAuthService {
 
     /**
      * Change the password of a user.
-     * @param data - The old and new password information.
+     * @param data - new password information.
      * @param userId - The unique ID of the user whose password is to be changed.
      * @returns A Promise resolving to `true` if the password was successfully changed, otherwise `false`.
      */
-    changeUserPassword(data: IChangePassword, userId: string): Promise<boolean>;
+    changeUserPassword(data: IChangePassword, userId: string): Promise<boolean>
+
+    /**
+     * Reset password of a user.
+     * @param data - The email and password information.
+     * @returns A Promise resolving to `true` if the password was successfully reset, otherwise `false`.
+     */
+    resetPassword(data: IResetPassword): Promise<boolean>
 }

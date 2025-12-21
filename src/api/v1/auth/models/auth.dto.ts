@@ -1,4 +1,4 @@
-import { UserRole } from "./auth.entity";
+import { AuthStatus, UserRole } from "./auth.entity";
 
 export interface IRegisterData {
     username: string;
@@ -13,6 +13,19 @@ export interface ILoginCredentials {
 }
 
 export interface IChangePassword {
-    oldPassword: string;
-    newPassword: string;
+    password: string;
+}
+
+export interface IResetPassword {
+    email: string;
+    password: string;
+}
+
+export interface IAuthUser {
+    id: string;
+    username: string;
+    email: string;
+    role: UserRole;
+    status: AuthStatus;
+    isVerified: boolean;
 }

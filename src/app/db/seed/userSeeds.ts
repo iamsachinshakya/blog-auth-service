@@ -2,8 +2,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-import { UserRole } from "../../../api/v1/auth/models/auth.entity";
-import { AuthStatus } from "../../../api/v1/common/models/common.dto";
+import { AuthStatus, UserRole } from "../../../api/v1/auth/models/auth.entity";
 
 export async function getUserSeeds() {
     const hashedPassword = await bcrypt.hash("password123", 10);

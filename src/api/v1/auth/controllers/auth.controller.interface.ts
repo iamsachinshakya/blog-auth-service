@@ -38,12 +38,20 @@ export interface IAuthController {
     refreshAccessToken(req: Request, res: Response): Promise<Response>;
 
     /**
-     * Change the password of the currently authenticated user.
+     * Change the User password.
      * @param req - Express request containing old and new passwords.
      * @param res - Express response confirming the password change.
      * @returns A Promise resolving to the HTTP response.
      */
-    changePassword(req: Request, res: Response): Promise<Response>;
+    changeUserPassword(req: Request, res: Response): Promise<Response>;
+
+    /**
+     * Change the own password of the logout user.
+     * @param req - Express request containing old and new passwords.
+     * @param res - Express response confirming the password change.
+     * @returns A Promise resolving to the HTTP response.
+     */
+    resetPassword(req: Request, res: Response): Promise<Response>
 
     /**
      * Get the currently authenticated user's profile.

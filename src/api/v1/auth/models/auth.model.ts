@@ -6,8 +6,7 @@ import {
     timestamp,
     boolean
 } from "drizzle-orm/pg-core";
-import { UserRole } from "./auth.entity";
-import { AuthStatus } from "../../common/models/common.dto";
+import { AuthStatus, UserRole } from "./auth.entity";
 
 export const authUsers = pgTable("auth_users", {
     id: uuid("id")

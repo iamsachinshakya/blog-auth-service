@@ -65,16 +65,20 @@ export class AuthController implements IAuthController {
     return ApiResponse.success(res, "Access token refreshed successfully");
   }
 
-  async changePassword(req: Request, res: Response): Promise<Response> {
+  async changeUserPassword(req: Request, res: Response): Promise<Response> {
     const userId = req.params.id;
-    const { oldPassword, newPassword } = req.body;
+    const { password } = req.body;
 
     if (!userId) {
       throw new ApiError("User ID missing in request params", 400, ErrorCode.BAD_REQUEST);
     }
-
-    await this.authService.changeUserPassword({ oldPassword, newPassword }, userId);
-
+    await this.authService.changeUserPassword({ password }, userId);
     return ApiResponse.success(res, "Password changed successfully");
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<Response> {
+    const { email, password } = req.body;
+    await this.authService.resetPassword({ email, password });
+    return ApiResponse.success(res, "Password reset successfully");
   }
 }

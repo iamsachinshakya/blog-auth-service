@@ -5,8 +5,8 @@ CREATE TABLE "auth_users" (
 	"password" text NOT NULL,
 	"role" text DEFAULT 'user' NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
+	"is_verified" boolean DEFAULT false NOT NULL,
 	"refresh_token" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"last_login" timestamp
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );

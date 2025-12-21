@@ -1,5 +1,5 @@
 {
-  "id": "42951f36-0b56-430a-9ff7-2d78e2b4b7aa",
+  "id": "9b11e92a-d575-4ef3-9a22-d8ce1edd1c4e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -47,6 +47,13 @@
           "notNull": true,
           "default": "'active'"
         },
+        "is_verified": {
+          "name": "is_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "refresh_token": {
           "name": "refresh_token",
           "type": "text",
@@ -66,12 +73,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "last_login": {
-          "name": "last_login",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
